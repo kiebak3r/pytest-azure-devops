@@ -1,0 +1,10 @@
+site_name: pytest-azure-devops
+site_description: Simplifies using azure devops parallel strategy with pytest. See https://docs.microsoft.com/en-us/azure/devops/pipelines/test/parallel-testing-any-test-runner
+site_author: Francesc Elies
+
+theme: readthedocs
+
+repo_url: https://github.com/FrancescElies/pytest-azure-devops
+
+pages:
+- Home: index.md
