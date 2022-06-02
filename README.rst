@@ -50,5 +50,6 @@ Usage
 .. _`pytest`: https://github.com/pytest-dev/pytest
 .. _`tox`: https://tox.readthedocs.io/en/latest/
 .. _`pip`: https://pypi.org/project/pip/
+.. _`PyPI`: https://pypi.org/project/pytest-azure-devops
 .. _`azure devops parallel strategy`: https://docs.microsoft.com/en-us/azure/devops/pipelines/test/parallel-testing-any-test-runner
 .. _`ParallelTestingSample-Python`: https://github.com/PBoraMSFT/ParallelTestingSample-Python
