@@ -21,6 +21,7 @@ setup(
                  '(https://docs.microsoft.com/en-us/azure/devops/pipelines/test/parallel-testing-any-test-runner) '
                  'with pytest.'),
     long_description=read('README.rst'),
+    long_description_content_type="text/x-rst",
     py_modules=['pytest_azure_devops'],
     python_requires='>=3.5',
     install_requires=['pytest>=3.5.0'],
