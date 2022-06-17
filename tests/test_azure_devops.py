@@ -13,34 +13,30 @@ def test_azure_devops_with_pytest_mark(testdir, monkeypatch):
     testdir.makepyfile("""
         import pytest
 
-        # group 1
         def test_1(): ...
         def test_2(): ...
         def test_3(): ...
-
-        # group 2
         @pytest.mark.asubset
         def test_4(): ...
         @pytest.mark.asubset
         def test_5(): ...
-        def test_6(): ...  # even though it belongs to worker 2,
-                           # should not be executed.
-
-        # group 3
+        def test_6(): ...
         def test_7(): ...
         def test_8(): ...
-        @pytest.mark.asubset  # despite of the mark,
-                              # should not be executed
+        @pytest.mark.asubset
         def test_9(): ...
     """)
 
     result = testdir.runpytest('-m asubset', '-v')
 
     result.stdout.fnmatch_lines([
-        '*Agent nr. 2 of 3 selected 3 of 9 tests*',
-        '*::test_4 PASSED*',
+        # Marks are filtered before the plugin can decide what tests
+        # to execute, thus 3 tests only to select from.
+        '*Agent nr. 2 of 3 selected 1 of 3 tests*',
+        # worker 2 selects only test 5
         '*::test_5 PASSED*',
-        '*2 passed, 1 deselected*',
+        # 6 deselect: tests that does not have `asubset` mark
+        '*1 passed, 6 deselected*',
     ])
 
     assert result.ret == 0
@@ -48,9 +44,14 @@ def test_azure_devops_with_pytest_mark(testdir, monkeypatch):
     result = testdir.runpytest('-m not asubset', '-v')
 
     result.stdout.fnmatch_lines([
-        '*Agent nr. 2 of 3 selected 3 of 9 tests*',
+        # Marks are filtered before the plugin can decide what tests
+        # to execute, thus 6 tests only to select from.
+        '*Agent nr. 2 of 3 selected 2 of 6 tests*',
+        # worker 2 selects only test 3 & 6
+        '*::test_3 PASSED*',
         '*::test_6 PASSED*',
-        '*1 passed, 2 deselected*',
+        # 6 deselected: test that have `asubset` mark
+        '*2 passed, 3 deselected*',
     ])
 
     assert result.ret == 0

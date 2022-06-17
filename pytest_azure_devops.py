@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import pytest
 from itertools import zip_longest
 from math import ceil
 
@@ -20,38 +21,52 @@ def grouper(items, total_groups: int):
     [[1, 2], [3, 4], [5, 6], [7, 8]]
 
     >>> grouper([1,2,3,4,5,6,7,8], 5)
-    Traceback (most recent call last):
-    ...
-    RuntimeError: Could not divide items with length 8 into 5 groups try with a smaller number of groups
+    [[1, 2], [3, 4], [5, 6], [7], [8]]
+
+    >>> grouper([1,2,3,4,5,6,7,8], 6)
+    [[1, 2], [3, 4], [5], [6], [7], [8]]
+
+    >>> grouper([1,2,3,4,5,6,7,8], 7)
+    [[1, 2], [3], [4], [5], [6], [7], [8]]
+
+    >>> grouper([1,2,3,4,5,6,7,8], 8)
+    [[1], [2], [3], [4], [5], [6], [7], [8]]
     """
     if total_groups <= 0:
-        raise ValueError(
-            f"total_groups should be bigger than zero but got {total_groups}"
-        )
+        raise ValueError(f"total_groups should be bigger than zero but got {total_groups}")
 
-    chunk_size = ceil(len(items) / total_groups)
+    if total_groups < (len(items) / 2):
+        chunk_size = ceil(len(items) / total_groups)
+    else:
+        chunk_size = 1
 
     groups = [
-        [y for y in x if y]
-        for x in zip_longest(*([iter(items)] * chunk_size), fillvalue=None)
+        [y for y in x if y] for x in zip_longest(*([iter(items)] * chunk_size), fillvalue=None)
     ]
 
-    if (len(groups)) != total_groups:
-        raise RuntimeError(
-            f"Could not divide items with length {len(items)} "
-            f"into {total_groups} groups try with a smaller number of groups"
-        )
+    num_extra_groups = len(groups) - total_groups
 
-    return groups
+    if not num_extra_groups:
+        return groups
+    elif num_extra_groups > 0:
+        # rebalance extra groups
+        redist_groups = [groups[idx * 2] + groups[idx * 2 + 1] for idx in range(num_extra_groups)]
+        redist_groups += groups[num_extra_groups * 2:]
+        return redist_groups
+    else:
+        raise RuntimeError(f"Expected {total_groups} groups but got {groups}")
 
 
+@pytest.hookimpl(trylast=True)
 def pytest_collection_modifyitems(config, items):
     if not os.environ.get("TF_BUILD"):
-        print("pytest-azure-devops installed but not in azure devops (plugin disabled). "
-              "To run plugin either run in tests in CI azure devops "
-              "or set environment variables "
-              "TF_BUILD, SYSTEM_TOTALJOBSINPHASE and "
-              "SYSTEM_JOBPOSITIONINPHASE.")
+        print(
+            "pytest-azure-devops installed but not in azure devops (plugin disabled). "
+            "To run plugin either run in tests in CI azure devops "
+            "or set environment variables "
+            "TF_BUILD, SYSTEM_TOTALJOBSINPHASE and "
+            "SYSTEM_JOBPOSITIONINPHASE."
+        )
         return
 
     total_agents = int(os.environ.get("SYSTEM_TOTALJOBSINPHASE", 1))
@@ -66,3 +81,9 @@ def pytest_collection_modifyitems(config, items):
     )
 
     items[:] = agent_tests
+
+
+if __name__ == "__main__":
+    import doctest
+
+    print(doctest.testmod(raise_on_error=True))
