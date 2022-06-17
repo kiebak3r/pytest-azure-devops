@@ -36,8 +36,22 @@ You can install "pytest-azure-devops" via `pip`_ from `PyPI`_::
 
 Usage
 -----
+Just ``pip install pytest-azure-devops`` before running pytest on azure devops and make sure you use
 
-* TODO
+.. code-block:: yaml
+
+   jobs:
+     - job: tests_parallel_ci
+       strategy:
+         parallel: 2
+
+       steps:
+       - script: python -m pip install --upgrade pytest-azure-devops
+         displayName: 'Install dependencies'
+
+       - script: python -m pytest mytests
+         displayName: 'Run pytest'
+
 
 .. _`Cookiecutter`: https://github.com/audreyr/cookiecutter
 .. _`@hackebrot`: https://github.com/hackebrot

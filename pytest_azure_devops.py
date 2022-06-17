@@ -47,6 +47,11 @@ def grouper(items, total_groups: int):
 
 def pytest_collection_modifyitems(config, items):
     if not os.environ.get("TF_BUILD"):
+        print("pytest-azure-devops installed but not in azure devops (plugin disabled). "
+              "To run plugin either run in tests in CI azure devops "
+              "or set environment variables "
+              "TF_BUILD, SYSTEM_TOTALJOBSINPHASE and "
+              "SYSTEM_JOBPOSITIONINPHASE.")
         return
 
     total_agents = int(os.environ.get("SYSTEM_TOTALJOBSINPHASE", 1))
@@ -55,8 +60,9 @@ def pytest_collection_modifyitems(config, items):
     agent_tests = grouper(items, total_agents)[agent_index]
 
     print(
-        f"This is agent nr. {agent_index + 1} out of {total_agents} "
-        f"and will run {len(agent_tests)} out of {len(items)}"
+        f"Agent nr. {agent_index + 1} of {total_agents} "
+        f"selected {len(agent_tests)} of {len(items)} tests "
+        "(other filters might apply afterwards, e.g. pytest marks)"
     )
 
     items[:] = agent_tests
