@@ -13,7 +13,7 @@ def read(fname):
 
 setup(
     name='pytest-azure-devops',
-    version='0.1.1',
+    version='0.2.0',
     author='Francesc Elies',
     license='Mozilla Public License 2.0',
     url='https://github.com/FrancescElies/pytest-azure-devops',
