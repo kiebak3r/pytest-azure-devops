@@ -61,8 +61,8 @@ def get_module_name(item):
     """Get the module name of a pytest item."""
     return item.parent.name
 
+# ... (previous code)
 
-@pytest.hookimpl(trylast=True)
 def pytest_collection_modifyitems(config, items):
     if not os.environ.get("TF_BUILD"):
         print(
@@ -91,11 +91,15 @@ def pytest_collection_modifyitems(config, items):
     # Flatten the distributed module groups
     agent_tests = [test for module_group in agent_module_groups for test in module_group]
 
+    # Print information about assigned module groups
     print(
         f"Agent nr. {agent_index + 1} of {total_agents} "
         f"selected {len(agent_tests)} of {len(items)} tests "
         "(other filters might apply afterwards, e.g. pytest marks)"
     )
+
+    for idx, module_group in enumerate(agent_module_groups):
+        print(f"Agent {agent_index + 1} - Assigned Module Group {idx + 1}: {module_group}")
 
     items[:] = agent_tests
 
