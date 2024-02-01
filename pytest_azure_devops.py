@@ -49,12 +49,17 @@ def grouper(items, total_groups: int):
     if not num_extra_groups:
         return groups
     elif num_extra_groups > 0:
-        # rebalance extra groups
+        # re balance extra groups
         redist_groups = [groups[idx * 2] + groups[idx * 2 + 1] for idx in range(num_extra_groups)]
         redist_groups += groups[num_extra_groups * 2:]
         return redist_groups
     else:
         raise RuntimeError(f"Expected {total_groups} groups but got {groups}")
+
+
+def get_module_name(item):
+    """Get the module name of a pytest item."""
+    return item.parent.name
 
 
 @pytest.hookimpl(trylast=True)
@@ -72,7 +77,19 @@ def pytest_collection_modifyitems(config, items):
     total_agents = int(os.environ.get("SYSTEM_TOTALJOBSINPHASE", 1))
     agent_index = int(os.environ.get("SYSTEM_JOBPOSITIONINPHASE", 1)) - 1
 
-    agent_tests = grouper(items, total_agents)[agent_index]
+    # Group tests by module
+    module_groups = {}
+    for item in items:
+        module_name = get_module_name(item)
+        if module_name not in module_groups:
+            module_groups[module_name] = []
+        module_groups[module_name].append(item)
+
+    # Distribute module groups to agents
+    agent_module_groups = grouper(list(module_groups.values()), total_agents)[agent_index]
+
+    # Flatten the distributed module groups
+    agent_tests = [test for module_group in agent_module_groups for test in module_group]
 
     print(
         f"Agent nr. {agent_index + 1} of {total_agents} "
