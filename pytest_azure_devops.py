@@ -86,10 +86,10 @@ def pytest_collection_modifyitems(config, items):
 
     print(
         f"Agent nr. {agent_index + 1} of {total_agents} "
-        f"selected {len(agent_tests)} of {len(items)} tests "
+        f"selected {len(agents)} of {len(items)} tests "
         "(other filters might apply afterwards, e.g. pytest marks)"
     )
-    items[:] = agent_tests
+    items[:] = agents
 
 
 if __name__ == "__main__":
