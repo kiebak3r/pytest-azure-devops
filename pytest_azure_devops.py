@@ -11,7 +11,7 @@ def grouper(items, total_groups: int):
     >>> grouper([1,2,3,4,5,6,7,8], 1)
     [[1, 2, 3, 4, 5, 6, 7, 8]]
 
-    >>> grouper( [1,2,3,4,5,6,7,8], 2 )
+    >>> grouper([1,2,3,4,5,6,7,8], 2)
     [[1, 2, 3, 4], [5, 6, 7, 8]]
 
     >>> grouper([1,2,3,4,5,6,7,8], 3)
@@ -49,7 +49,7 @@ def grouper(items, total_groups: int):
     if not num_extra_groups:
         return groups
     elif num_extra_groups > 0:
-        # re balance extra groups
+        # rebalance extra groups
         redist_groups = [groups[idx * 2] + groups[idx * 2 + 1] for idx in range(num_extra_groups)]
         redist_groups += groups[num_extra_groups * 2:]
         return redist_groups
@@ -57,12 +57,7 @@ def grouper(items, total_groups: int):
         raise RuntimeError(f"Expected {total_groups} groups but got {groups}")
 
 
-def get_module_name(item):
-    """Get the module name of a pytest item."""
-    return item.parent.name
-
-# ... (previous code)
-
+@pytest.hookimpl(trylast=True)
 def pytest_collection_modifyitems(config, items):
     if not os.environ.get("TF_BUILD"):
         print(
@@ -77,30 +72,23 @@ def pytest_collection_modifyitems(config, items):
     total_agents = int(os.environ.get("SYSTEM_TOTALJOBSINPHASE", 1))
     agent_index = int(os.environ.get("SYSTEM_JOBPOSITIONINPHASE", 1)) - 1
 
-    # Group tests by module
-    module_groups = {}
-    for item in items:
-        module_name = get_module_name(item)
-        if module_name not in module_groups:
-            module_groups[module_name] = []
-        module_groups[module_name].append(item)
+    # Group Tests
+    slow = [item for item in items if 'slow' in item.keywords]
+    tests = [item for item in items if 'slow' not in item.keywords]
+    slow_group = grouper(slow, total_agents)
+    tests_group = grouper(tests, total_agents)
 
-    # Distribute module groups to agents
-    agent_module_groups = grouper(list(module_groups.values()), total_agents)[agent_index]
+    # Merge All Groups (trying to divvy out slow tests to more agents)
+    combined_group = []
+    for i in range(total_agents):
+        combined_group.append(slow_group[i] + tests_group[i])
+    agents = combined_group[agent_index]
 
-    # Flatten the distributed module groups
-    agent_tests = [test for module_group in agent_module_groups for test in module_group]
-
-    # Print information about assigned module groups
     print(
         f"Agent nr. {agent_index + 1} of {total_agents} "
         f"selected {len(agent_tests)} of {len(items)} tests "
         "(other filters might apply afterwards, e.g. pytest marks)"
     )
-
-    for idx, module_group in enumerate(agent_module_groups):
-        print(f"Agent {agent_index + 1} - Assigned Module Group {idx + 1}: {module_group}")
-
     items[:] = agent_tests
 
 
