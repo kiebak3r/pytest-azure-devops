@@ -73,8 +73,8 @@ def pytest_collection_modifyitems(config, items):
     agent_index = int(os.environ.get("SYSTEM_JOBPOSITIONINPHASE", 1)) - 1
 
     # Group Tests
-    slow = [item for item in items if 'slow' in item.keywords]
-    tests = [item for item in items if 'slow' not in item.keywords]
+    slow = [item for item in items if 'splice' in item.keywords]
+    tests = [item for item in items if 'splice' not in item.keywords]
     slow_group = grouper(slow, total_agents)
     tests_group = grouper(tests, total_agents)
 
