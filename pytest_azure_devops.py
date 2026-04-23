@@ -13,10 +13,23 @@ env_vars_error = (
 
 
 def grouper(items, total_groups):
-    """Distribute items to groups in a balanced way using round-robin."""
+    group_map = {}
+    for item in items:
+        marker = item.get_closest_marker('xdist_group')
+        key = marker.args[0] if marker and marker.args else item.nodeid
+        group_map.setdefault(key, []).append(item)
+
+    # Sort groups by size (largest first)
+    groups = sorted(group_map.values(), key=len, reverse=True)
+
     agent_tests = [[] for _ in range(total_groups)]
-    for i, item in enumerate(items):
-        agent_tests[i % total_groups].append(item)
+    agent_counts = [0] * total_groups
+
+    for group in groups:
+        least_loaded = agent_counts.index(min(agent_counts))
+        agent_tests[least_loaded].extend(group)
+        agent_counts[least_loaded] += len(group)
+
     return agent_tests
 
 
